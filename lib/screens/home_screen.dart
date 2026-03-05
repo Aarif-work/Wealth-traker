@@ -12,54 +12,84 @@ class HomeScreen extends StatelessWidget {
     final wealthProvider = Provider.of<WealthProvider>(context);
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2, locale: 'en_IN');
     final compactFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildTotalWealthCard(wealthProvider, currencyFormat),
-            const SizedBox(height: 24),
-            _buildMonthlyStats(wealthProvider, compactFormat),
-            const SizedBox(height: 32),
-            _buildSectionTitle('WEALTH BREAKDOWN'),
-            const SizedBox(height: 16),
-            _buildWealthBreakdown(wealthProvider),
-            const SizedBox(height: 32),
-            _buildGoldGoalTracker(wealthProvider),
-            const SizedBox(height: 32),
-            _buildRecentActivityHeader(context),
-            const SizedBox(height: 16),
-            _buildRecentActivityList(wealthProvider, currencyFormat),
-            const SizedBox(height: 100), // Space for footer
-          ],
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FA),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildTotalWealthCard(wealthProvider, currencyFormat),
+              const SizedBox(height: 24),
+              _buildMonthlyStats(wealthProvider, compactFormat),
+              const SizedBox(height: 32),
+              _buildSectionTitle('WEALTH BREAKDOWN'),
+              const SizedBox(height: 16),
+              _buildWealthBreakdown(wealthProvider),
+              const SizedBox(height: 32),
+              _buildGoldGoalTracker(wealthProvider),
+              const SizedBox(height: 32),
+              _buildRecentActivityHeader(context),
+              const SizedBox(height: 16),
+              _buildRecentActivityList(wealthProvider, currencyFormat),
+              const SizedBox(height: 100), // Space for footer
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'DASHBOARD',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-            color: AppTheme.textBlack,
-            letterSpacing: 2.0,
+        const SizedBox(width: 48), // Placeholder for balance
+        Expanded(
+          child: Column(
+            children: [
+              const Text(
+                'DASHBOARD',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.textBlack,
+                  letterSpacing: 2.0,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Good Evening!',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.blueGrey.shade300,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Good Evening!',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.blueGrey.shade300,
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: const DecorationImage(
+              image: AssetImage('assets/image.png'),
+              fit: BoxFit.cover,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(color: Colors.white, width: 2),
           ),
         ),
       ],
