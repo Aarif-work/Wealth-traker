@@ -34,6 +34,50 @@ class Transaction {
   });
 }
 
+class HelpCharacter {
+  final String id;
+  final String tag;
+  final int tagColorValue;
+  final String name;
+  final String sideLabel;
+  final String message;
+  final double amount;
+  final int iconCodePoint;
+  final int avatarBgValue;
+  final int avatarFgValue;
+  final int badgeIconCodePoint;
+  final int badgeColorValue;
+  final bool isGold;
+  final int maxTimes;
+  int currentHelpedCount;
+  DateTime? lastHelpedDate;
+
+  HelpCharacter({
+    required this.id,
+    required this.tag,
+    required this.tagColorValue,
+    required this.name,
+    required this.sideLabel,
+    required this.message,
+    required this.amount,
+    required this.iconCodePoint,
+    required this.avatarBgValue,
+    required this.avatarFgValue,
+    required this.badgeIconCodePoint,
+    required this.badgeColorValue,
+    required this.isGold,
+    this.maxTimes = 12, // Default limit
+    this.currentHelpedCount = 0,
+    this.lastHelpedDate,
+  });
+
+  bool get canHelpThisMonth {
+    if (lastHelpedDate == null) return true;
+    final now = DateTime.now();
+    return (lastHelpedDate!.month != now.month || lastHelpedDate!.year != now.year) && currentHelpedCount < maxTimes;
+  }
+}
+
 class WealthProvider with ChangeNotifier {
   double _cashSavings = 12500.0;
   final double _cashSavingsGoal = 25000.0; // Goal: $250,000
@@ -41,6 +85,39 @@ class WealthProvider with ChangeNotifier {
   final double _goldGoldInGrams = 1.0; // Goal: 1 gram
   final double _goldPricePerGram = 6500.0; // Simulated gold price
   final double _lendingLimit = 2000.0; // Monthly lending limit
+
+  final List<HelpCharacter> _characters = [
+    HelpCharacter(
+      id: 'c1',
+      tag: 'WIFE',
+      tagColorValue: 0xFFFFA000,
+      name: 'Future Home',
+      sideLabel: 'Target: ₹2L',
+      message: 'Could you help with our future home? Every little bit counts.',
+      amount: 500.0,
+      iconCodePoint: 0xe6bb, // woman_rounded
+      avatarBgValue: 0xFFFFF3E0,
+      avatarFgValue: 0xFFFF9800,
+      badgeIconCodePoint: 0xe25b, // favorite_rounded
+      badgeColorValue: 0xFFFF5252,
+      isGold: false,
+    ),
+    HelpCharacter(
+      id: 'c2',
+      tag: 'MOTHER',
+      tagColorValue: 0xFF1976D2,
+      name: 'Healthcare Fund',
+      sideLabel: 'Safety Net',
+      message: 'Let\'s save for medicine, just in case. Health comes first.',
+      amount: 200.0,
+      iconCodePoint: 0xe21f, // elderly_woman_rounded
+      avatarBgValue: 0xFFE3F2FD,
+      avatarFgValue: 0xFF1976D2,
+      badgeIconCodePoint: 0xe2e4, // health_and_safety_rounded
+      badgeColorValue: 0xFF2196F3,
+      isGold: false,
+    ),
+  ];
 
   final List<Lending> _lendingList = [
     Lending(
@@ -93,6 +170,7 @@ class WealthProvider with ChangeNotifier {
   double get goldValue => _digitalGoldInGrams * _goldPricePerGram;
   double get totalWealth => _cashSavings + goldValue;
   List<Transaction> get transactions => [..._transactions.reversed];
+  List<HelpCharacter> get characters => _characters;
   List<Lending> get lendingList => [..._lendingList];
   double get lendingLimit => _lendingLimit;
   double get currentLent => _lendingList.where((l) => !l.isReturned).fold(0.0, (sum, l) => sum + l.amount);
@@ -112,9 +190,21 @@ class WealthProvider with ChangeNotifier {
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  double get netBalance => monthlyIncome - monthlyExpenses;
+  double get monthlyGoldAmount {
+    final now = DateTime.now();
+    return _transactions
+        .where((t) => t.type == TransactionType.gold && t.date.month == now.month && t.date.year == now.year)
+        .fold(0.0, (sum, t) => sum + t.amount);
+  }
+
+  double get netBalance => monthlyIncome - monthlyExpenses - monthlyGoldAmount;
 
   // Actions
+  void addNewCharacter(HelpCharacter character) {
+    _characters.add(character);
+    notifyListeners();
+  }
+
   void addLending(String name, double amount, DateTime dueDate) {
     _lendingList.add(Lending(
       id: DateTime.now().toString(),
@@ -141,12 +231,21 @@ class WealthProvider with ChangeNotifier {
     }
   }
 
-  void helpSave(String name, double amount, bool toGold) {
+  Future<void> helpSave(String charId) async {
+    final index = _characters.indexWhere((c) => c.id == charId);
+    if (index == -1) return;
+    
+    final char = _characters[index];
+    if (!char.canHelpThisMonth) return;
+
+    final amount = char.amount;
+    final toGold = char.isGold;
+
     if (toGold) {
       final grams = amount / _goldPricePerGram;
       final newTransaction = Transaction(
         id: DateTime.now().toString(),
-        title: 'Help Save: $name (Gold)',
+        title: 'Help Save: ${char.name} (Gold)',
         amount: amount,
         date: DateTime.now(),
         type: TransactionType.gold,
@@ -156,7 +255,7 @@ class WealthProvider with ChangeNotifier {
     } else {
       final newTransaction = Transaction(
         id: DateTime.now().toString(),
-        title: 'Help Save: $name (Savings)',
+        title: 'Help Save: ${char.name} (Savings)',
         amount: amount,
         date: DateTime.now(),
         type: TransactionType.income,
@@ -164,8 +263,13 @@ class WealthProvider with ChangeNotifier {
       _cashSavings += amount;
       _transactions.add(newTransaction);
     }
+
+    char.currentHelpedCount++;
+    char.lastHelpedDate = DateTime.now();
+    
     notifyListeners();
   }
+
   void addIncome(String title, double amount) {
     final newTransaction = Transaction(
       id: DateTime.now().toString(),

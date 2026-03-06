@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2, locale: 'en_IN');
     final compactFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -43,53 +43,50 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 17) return 'Good Afternoon!';
+    return 'Good Evening!';
+  }
+
   Widget _buildHeader() {
+    final now = DateTime.now();
+    final dateStr = DateFormat('EEEE, dd MMMM').format(now);
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(width: 48), // Placeholder for balance
-        Expanded(
-          child: Column(
-            children: [
-              const Text(
-                'DASHBOARD',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.textBlack,
-                  letterSpacing: 2.0,
-                ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'DASHBOARD',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.textBlack,
+                letterSpacing: 2.0,
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Good Evening!',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blueGrey.shade300,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: const DecorationImage(
-              image: AssetImage('assets/image.png'),
-              fit: BoxFit.cover,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+            const SizedBox(height: 4),
+            Text(
+              _getGreeting(),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.blueGrey.shade400,
               ),
-            ],
-            border: Border.all(color: Colors.white, width: 2),
+            ),
+          ],
+        ),
+        Text(
+          dateStr.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            color: AppTheme.primaryGreen,
+            letterSpacing: 1.0,
           ),
         ),
       ],
@@ -186,7 +183,7 @@ class HomeScreen extends StatelessWidget {
             'MONTHLY INCOME',
             format.format(provider.monthlyIncome),
             Icons.arrow_upward_rounded,
-            const Color(0xFF00E676), // Vibrant green
+            AppTheme.primaryGreen,
             0.7, // Simplified ratio for UI
           ),
         ),
@@ -265,71 +262,116 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildWealthBreakdown(WealthProvider provider) {
-    // Simplified breakdown logic based on current balances
-    final double total = provider.totalWealth;
-    final double cashRatio = total > 0 ? provider.cashSavings / total : 0.7;
-    final double goldRatio = 1.0 - cashRatio;
+    final double income = provider.monthlyIncome;
+    final double expenses = provider.monthlyExpenses;
+    final double gold = provider.monthlyGoldAmount;
+    
+    // Calculate percentages relative to income
+    final int expensePct = income > 0 ? ((expenses / income) * 100).round() : 0;
+    final int goldPct = income > 0 ? ((gold / income) * 100).round() : 0;
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFC),
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: AppTheme.softGray.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 12,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: (cashRatio * 100).toInt(),
-                    child: Container(color: const Color(0xFF00E676)),
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    flex: (goldRatio * 100).toInt(),
-                    child: Container(color: const Color(0xFFFFD54F)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildLegendItem('Cash Savings', (cashRatio * 100).toInt(), const Color(0xFF00E676)),
-              _buildLegendItem('Digital Gold', (goldRatio * 100).toInt(), const Color(0xFFFFD54F)),
+              const Text(
+                'MONTHLY ANALYSIS',
+                style: TextStyle(
+                  color: AppTheme.textGray,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Icon(Icons.analytics_outlined, color: Colors.blueGrey.shade100, size: 20),
             ],
+          ),
+          const SizedBox(height: 20),
+          // Expense Bar (Inverted - starting from left but with red)
+          _buildAnalysisBar("Expenses", expensePct, AppTheme.expenseRed),
+          const SizedBox(height: 16),
+          // Gold Bar (Inverted - maybe the user means the logic is focused on gold)
+          _buildAnalysisBar("Gold Savings", goldPct, AppTheme.primaryGreen),
+          const SizedBox(height: 24),
+          Text(
+            "This month your expenses are $expensePct% and gold savings are $goldPct% of your income.",
+            style: const TextStyle(
+              color: AppTheme.textBlack,
+              fontSize: 14,
+              height: 1.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.2,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(String label, int percentage, Color color) {
-    return Row(
+  Widget _buildAnalysisBar(String label, int percentage, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(color: AppTheme.textBlack, fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '$percentage%',
+              style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w900),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Text(
-          '$label ($percentage%)',
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.blueGrey.shade600,
-          ),
+        const SizedBox(height: 8),
+        Stack(
+          children: [
+            Container(
+              height: 8,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppTheme.softGray,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            FractionallySizedBox(
+              widthFactor: (percentage / 100).clamp(0.0, 1.0),
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: [
+                    BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
+
+
 
   Widget _buildGoldGoalTracker(WealthProvider provider) {
     return Container(
@@ -414,7 +456,7 @@ class HomeScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF00E676),
+              color: AppTheme.primaryGreen,
             ),
           ),
         ),
@@ -443,8 +485,8 @@ class HomeScreen extends StatelessWidget {
 
     if (isIncome) {
       icon = Icons.wallet_rounded;
-      iconColor = const Color(0xFF00E676);
-      iconBg = const Color(0xFFE8F5E9);
+      iconColor = AppTheme.primaryGreen;
+      iconBg = AppTheme.primaryGreen.withValues(alpha: 0.1);
     } else if (isGold) {
       icon = Icons.auto_awesome_rounded;
       iconColor = const Color(0xFFFFD54F);
@@ -495,7 +537,7 @@ class HomeScreen extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: isIncome ? const Color(0xFF00E676) : AppTheme.textBlack,
+              color: isIncome ? AppTheme.primaryGreen : AppTheme.textBlack,
             ),
           ),
         ],

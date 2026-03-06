@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 import '../screens/home_screen.dart';
 import '../screens/activity_screen.dart';
 import '../screens/wealth_screen.dart';
@@ -36,18 +37,22 @@ class _MainLayoutState extends State<MainLayout> {
   Widget _buildBottomNavBar() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white, // Pure white background
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
+            color: Colors.black.withValues(alpha: 0.04), // Soft subtle shadow
+            blurRadius: 30,
+            offset: const Offset(0, -10),
           ),
         ],
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -80,7 +85,7 @@ class _MainLayoutState extends State<MainLayout> {
               transform: Matrix4.translationValues(0, isSelected ? -4 : 0, 0),
               child: Icon(
                 isSelected ? (activeIcon ?? icon) : icon,
-                color: isSelected ? const Color(0xFF1D1D1F) : Colors.blueGrey.shade300,
+                color: isSelected ? AppTheme.primaryGreen : Colors.blueGrey.shade100,
                 size: 26,
               ),
             ),
@@ -90,7 +95,7 @@ class _MainLayoutState extends State<MainLayout> {
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? const Color(0xFF1D1D1F) : Colors.blueGrey.shade300,
+                color: isSelected ? AppTheme.primaryGreen : Colors.blueGrey.shade100,
               ),
             ),
           ],
@@ -120,11 +125,11 @@ class _MainLayoutState extends State<MainLayout> {
         margin: const EdgeInsets.only(bottom: 4, left: 8, right: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFB800), // Amber-Gold
+          color: AppTheme.primaryGreen,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFB800).withValues(alpha: 0.4),
+              color: AppTheme.primaryGreen.withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -132,7 +137,7 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         child: const Icon(
           Icons.add_rounded,
-          color: Colors.black87,
+          color: Colors.black,
           size: 28,
         ),
       ),

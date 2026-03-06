@@ -16,23 +16,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? selectedCategory = "Food";
 
   final List<Map<String, dynamic>> categories = [
-    {"label": "Food", "icon": Icons.restaurant_rounded, "color": Color(0xFFFF9800)},
-    {"label": "Salary", "icon": Icons.wallet_rounded, "color": Color(0xFF00C853)},
-    {"label": "Investment", "icon": Icons.trending_up_rounded, "color": Color(0xFF2962FF)},
-    {"label": "Rent", "icon": Icons.home_rounded, "color": Color(0xFFAA00FF)},
-    {"label": "Shopping", "icon": Icons.shopping_bag_rounded, "color": Color(0xFFC51162)},
-    {"label": "Health", "icon": Icons.health_and_safety_rounded, "color": Color(0xFFD50000)},
-    {"label": "Other", "icon": Icons.more_horiz_rounded, "color": Colors.blueGrey},
+    {"label": "Food", "icon": Icons.restaurant_rounded, "color": const Color(0xFFFFB74D)}, // Soft Orange
+    {"label": "Salary", "icon": Icons.wallet_rounded, "color": AppTheme.primaryGreen},
+    {"label": "Investment", "icon": Icons.trending_up_rounded, "color": const Color(0xFF64B5F6)}, // Soft Blue
+    {"label": "Rent", "icon": Icons.home_rounded, "color": const Color(0xFFBA68C8)}, // Soft Purple
+    {"label": "Shopping", "icon": Icons.shopping_bag_rounded, "color": const Color(0xFFF06292)}, // Soft Pink
+    {"label": "Health", "icon": Icons.health_and_safety_rounded, "color": const Color(0xFFE57373)}, // Soft Red
+    {"label": "Other", "icon": Icons.more_horiz_rounded, "color": Colors.blueGrey.shade100},
   ];
 
   void _onNumberPressed(String value) {
     setState(() {
       if (amount == "0") {
+        if (value == "0" || value == "00") return;
         amount = value;
       } else {
-        if (value == "." && amount.contains(".")) return;
-        if (amount.contains(".") && amount.split(".")[1].length >= 2) return;
-        if (amount.length >= 10) return;
+        if (amount.length + value.length > 10) return;
         amount += value;
       }
     });
@@ -53,28 +52,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final wealthProvider = Provider.of<WealthProvider>(context, listen: false);
-    final themeColor = isExpense ? const Color(0xFFE53935) : const Color(0xFF00C853);
-    final bgGradientColor = isExpense ? const Color(0xFFFFF1F1) : const Color(0xFFE8F5E9);
+    final themeColor = isExpense ? const Color(0xFFE53935) : AppTheme.primaryGreen;
+    final bgGradientColor = Colors.white;
 
     return Scaffold(
       backgroundColor: bgGradientColor,
       appBar: AppBar(
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
-                ],
-              ),
-              child: const Icon(Icons.close_rounded, color: AppTheme.textBlack, size: 20),
-            ),
-            onPressed: () => Navigator.pop(context),
-          ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.close_rounded, color: AppTheme.textGray, size: 28),
         ),
         title: const Text(
           "New Transaction", 
@@ -89,8 +75,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Column(
-        children: [
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity! > 500) {
+            // Swipe Right -> Switch to Expense
+            if (!isExpense) setState(() => isExpense = true);
+          } else if (details.primaryVelocity! < -500) {
+            // Swipe Left -> Switch to Income
+            if (isExpense) setState(() => isExpense = false);
+          }
+        },
+        child: Column(
+          children: [
           const SizedBox(height: 16),
           _buildToggle(themeColor),
           const SizedBox(height: 32),
@@ -100,7 +97,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
+                color: Colors.white,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
                 boxShadow: [
                   BoxShadow(color: themeColor.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, -10)),
@@ -121,7 +118,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildToggle(Color activeColor) {
@@ -129,7 +126,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       height: 54,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
+        color: AppTheme.softGray.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(27),
         border: Border.all(color: Colors.white, width: 2),
       ),
@@ -178,7 +175,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     child: Text(
                       "INCOME",
                       style: TextStyle(
-                        color: !isExpense ? const Color(0xFF00C853) : Colors.blueGrey.shade400,
+                        color: !isExpense ? AppTheme.primaryGreen : Colors.blueGrey.shade400,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.0,
                         fontSize: 13,
@@ -215,7 +212,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               padding: const EdgeInsets.only(top: 10),
               child: Text(
                 "₹",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color.withValues(alpha: 0.8)),
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color.withValues(alpha: 0.4)),
               ),
             ),
             const SizedBox(width: 6),
@@ -307,7 +304,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ["1", "2", "3"],
       ["4", "5", "6"],
       ["7", "8", "9"],
-      [".", "0", "DEL"],
+      ["00", "0", "DEL"],
     ];
 
     return Padding(
@@ -332,7 +329,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     style: TextStyle(
                       fontSize: 28, 
                       fontWeight: FontWeight.w800, 
-                      color: AppTheme.textBlack,
+                      color: AppTheme.textBlack.withValues(alpha: 0.8),
                     )
                   ), 
                   () => _onNumberPressed(key),
@@ -342,36 +339,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           );
         }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildKeyBtn(Widget child, VoidCallback onTap, bool isAction) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
-        splashColor: Colors.black.withValues(alpha: 0.05),
-        highlightColor: Colors.black.withValues(alpha: 0.02),
-        child: Container(
-          width: 85,
-          height: 65,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isAction ? Colors.white.withValues(alpha: 0.5) : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              if (!isAction) BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
-          ),
-          child: child,
-        ),
       ),
     );
   }
@@ -426,4 +393,85 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ),
     );
   }
+  Widget _buildKeyBtn(Widget child, VoidCallback onTap, bool isAction) {
+    return _TactileButton(
+      onTap: onTap,
+      isAction: isAction,
+      child: child,
+    );
+  }
+}
+
+class _TactileButton extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  final bool isAction;
+
+  const _TactileButton({
+    required this.child,
+    required this.onTap,
+    required this.isAction,
+  });
+
+  @override
+  State<_TactileButton> createState() => _TactileButtonState();
+}
+
+class _TactileButtonState extends State<_TactileButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _controller.forward(),
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) => Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Container(
+            width: 85,
+            height: 65,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: widget.isAction ? Colors.white.withValues(alpha: 0.5) : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                if (!widget.isAction)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+              ],
+              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+            ),
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+
 }

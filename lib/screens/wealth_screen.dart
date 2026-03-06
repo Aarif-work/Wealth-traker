@@ -5,35 +5,7 @@ import '../providers/wealth_provider.dart';
 import '../theme/app_theme.dart';
 
 // Strongly-typed model for character cards
-class HelpCharacter {
-  final String tag;
-  final Color tagColor;
-  final String name;
-  final String sideLabel;
-  final String message;
-  final double amount;
-  final IconData icon;
-  final Color avatarBg;
-  final Color avatarFg;
-  final IconData badgeIcon;
-  final Color badgeColor;
-  final bool isGold;
-
-  const HelpCharacter({
-    required this.tag,
-    required this.tagColor,
-    required this.name,
-    required this.sideLabel,
-    required this.message,
-    required this.amount,
-    required this.icon,
-    required this.avatarBg,
-    required this.avatarFg,
-    required this.badgeIcon,
-    required this.badgeColor,
-    required this.isGold,
-  });
-}
+// Local HelpCharacter is removed, using the one from WealthProvider
 
 class WealthScreen extends StatefulWidget {
   const WealthScreen({super.key});
@@ -43,66 +15,168 @@ class WealthScreen extends StatefulWidget {
 }
 
 class _WealthScreenState extends State<WealthScreen> {
-  double _localImpact = 4250.0;
+  final double _localImpact = 4250.0;
+  bool _isProcessing = false;
+  bool _isProcessingDone = false;
+  bool _showThankYou = false;
+  HelpCharacter? _currentActiveChar;
 
-  static const List<HelpCharacter> characters = [
-    HelpCharacter(
-      tag: 'WIFE',
-      tagColor: Color(0xFFFFA000), // Amber
-      name: 'Future Home',
-      sideLabel: 'Target: ₹2L',
-      message: 'Could you help with our future home? Every little bit counts.',
-      amount: 500.0,
-      icon: Icons.woman_rounded,
-      avatarBg: Color(0xFFFFF3E0),
-      avatarFg: Color(0xFFFF9800),
-      badgeIcon: Icons.favorite_rounded,
-      badgeColor: Color(0xFFFF5252),
-      isGold: false,
-    ),
-    HelpCharacter(
-      tag: 'MOTHER',
-      tagColor: Color(0xFF1976D2), // Blue
-      name: 'Healthcare Fund',
-      sideLabel: 'Safety Net',
-      message: 'Let\'s save for medicine, just in case. Health comes first.',
-      amount: 200.0,
-      icon: Icons.elderly_woman_rounded,
-      avatarBg: Color(0xFFE3F2FD),
-      avatarFg: Color(0xFF1976D2),
-      badgeIcon: Icons.health_and_safety_rounded,
-      badgeColor: Color(0xFF2196F3),
-      isGold: false,
-    ),
-    HelpCharacter(
-      tag: 'FUTURE CHILD',
-      tagColor: Color(0xFFC2185B), // Pink/Purple
-      name: 'Education Fund',
-      sideLabel: 'Long-term',
-      message: 'Every penny secures a brighter tomorrow and better education.',
-      amount: 1000.0,
-      icon: Icons.child_care_rounded,
-      avatarBg: Color(0xFFFCE4EC),
-      avatarFg: Color(0xFFC2185B),
-      badgeIcon: Icons.school_rounded,
-      badgeColor: Color(0xFFFF9800),
-      isGold: true,
-    ),
-    HelpCharacter(
-      tag: 'EMERGENCY',
-      tagColor: Color(0xFFD32F2F), // Red
-      name: 'Emergency Fund',
-      sideLabel: 'Critical',
-      message: 'Being prepared protects you from life\'s sudden surprises.',
-      amount: 250.0,
-      icon: Icons.shield_rounded,
-      avatarBg: Color(0xFFFFEBEE),
-      avatarFg: Color(0xFFD32F2F),
-      badgeIcon: Icons.bolt_rounded,
-      badgeColor: Color(0xFFFF9800),
-      isGold: true,
-    ),
-  ];
+  void _startHelpProcess(HelpCharacter char, WealthProvider provider) async {
+    setState(() {
+      _currentActiveChar = char;
+      _isProcessing = true;
+      _isProcessingDone = false;
+    });
+
+    // Simulated "Gold Inverse Process" delay
+    await Future.delayed(const Duration(seconds: 3));
+
+    await provider.helpSave(char.id);
+    
+    if (mounted) {
+      setState(() {
+        _isProcessingDone = true;
+      });
+    }
+  }
+
+  void _completeProcess() async {
+    setState(() {
+      _isProcessing = false;
+      _isProcessingDone = false;
+      _showThankYou = true;
+    });
+
+    // Show Thank You for 3 seconds
+    await Future.delayed(const Duration(seconds: 3));
+    if (mounted) {
+      setState(() {
+        _showThankYou = false;
+        _currentActiveChar = null;
+      });
+    }
+  }
+
+  void _showAddCharacterSheet(BuildContext context, WealthProvider provider) {
+    String name = "";
+    double amount = 0;
+    int limit = 1;
+    bool toGold = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          height: 450,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("New Character", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.textBlack)),
+              const SizedBox(height: 24),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "Character Name",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                ),
+                onChanged: (val) => name = val,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: "Amount (₹)",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) => amount = double.tryParse(val) ?? 0,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        labelText: "Limit (Times)",
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (val) => limit = int.tryParse(val) ?? 1,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text("Save Target:", style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text("GOLD"),
+                    selected: toGold,
+                    selectedColor: AppTheme.primaryGreen.withValues(alpha: 0.2),
+                    onSelected: (val) => setState(() => toGold = true),
+                  ),
+                  const SizedBox(width: 12),
+                  ChoiceChip(
+                    label: const Text("SAVINGS"),
+                    selected: !toGold,
+                    selectedColor: Colors.blue.withValues(alpha: 0.2),
+                    onSelected: (val) => setState(() => toGold = false),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (name.isNotEmpty && amount > 0) {
+                      provider.addNewCharacter(HelpCharacter(
+                        id: DateTime.now().toString(),
+                        tag: 'PERSONAL',
+                        tagColorValue: 0xFF1B5E20,
+                        name: name,
+                        sideLabel: 'Goal: ₹50k',
+                        message: 'Every help matters for our destiny.',
+                        amount: amount,
+                        iconCodePoint: 0xe491, // person_rounded
+                        avatarBgValue: 0xFFE8F5E9,
+                        avatarFgValue: 0xFF2E7D32,
+                        badgeIconCodePoint: 0xe5fa, // stars_rounded
+                        badgeColorValue: 0xFF00F04F,
+                        isGold: toGold,
+                        maxTimes: limit,
+                      ));
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: const Text("ADD TO LIST", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,34 +189,67 @@ class _WealthScreenState extends State<WealthScreen> {
         .fold(0.0, (sum, tx) => sum + tx.amount);
     final displayImpact = _localImpact + helpSaveTotal;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA), // Minimalist light grey/white background
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
-                children: [
-                  _buildHeroText(),
-                  const SizedBox(height: 28),
-                  _buildImpactBanner(displayImpact, currencyFormat),
-                  const SizedBox(height: 32),
-                  ...characters.map((char) => Padding(
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: _buildHelpCard(context, char, currencyFormat, provider),
-                  )),
-                ],
-              ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.white,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(context, provider),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
+                    children: [
+                      _buildHeroText(),
+                      const SizedBox(height: 28),
+                      _buildImpactBanner(displayImpact, currencyFormat),
+                      const SizedBox(height: 32),
+                      ...provider.characters.map((char) => Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: _buildHelpCard(context, char, currencyFormat, provider),
+                      )),
+                      const SizedBox(height: 32),
+                      _buildHelpLogs(provider, currencyFormat),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (_isProcessing) _buildProcessingOverlay(),
+        if (_showThankYou) _buildThankYouOverlay(),
+      ],
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildHelpLogs(WealthProvider provider, NumberFormat format) {
+    final helpLogs = provider.transactions.where((tx) => tx.title.startsWith('Help Save:')).toList();
+    if (helpLogs.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("HELP LOGS", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: AppTheme.textGray)),
+        const SizedBox(height: 16),
+        ...helpLogs.map((tx) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(tx.title.replaceFirst('Help Save:', '').trim(), style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(format.format(tx.amount), style: const TextStyle(color: AppTheme.primaryGreen, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        )),
+      ],
+    );
+  }
+
+  Widget _buildAppBar(BuildContext context, WealthProvider provider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -158,7 +265,10 @@ class _WealthScreenState extends State<WealthScreen> {
               letterSpacing: 0.2,
             ),
           ),
-          _appBarButton(Icons.info_outline_rounded),
+          GestureDetector(
+            onTap: () => _showAddCharacterSheet(context, provider),
+            child: _appBarButton(Icons.person_add_alt_1_rounded),
+          ),
         ],
       ),
     );
@@ -217,14 +327,14 @@ class _WealthScreenState extends State<WealthScreen> {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [const Color(0xFFFFF6E5), const Color(0xFFFFEAB8)],
+          colors: [AppTheme.primaryGreen.withValues(alpha: 0.1), AppTheme.primaryGreen.withValues(alpha: 0.2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFEAB8).withValues(alpha: 0.5),
+            color: AppTheme.primaryGreen.withValues(alpha: 0.1),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -264,16 +374,16 @@ class _WealthScreenState extends State<WealthScreen> {
                   color: const Color(0xFF00C853).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.trending_up_rounded, color: Color(0xFF00C853), size: 14),
+                    Icon(Icons.trending_up_rounded, color: AppTheme.primaryGreen, size: 14),
                     SizedBox(width: 4),
                     Text(
                       '12%',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF00C853),
+                        color: AppTheme.primaryGreen,
                       ),
                     ),
                   ],
@@ -292,14 +402,19 @@ class _WealthScreenState extends State<WealthScreen> {
     NumberFormat format,
     WealthProvider provider,
   ) {
+    bool canHelp = char.canHelpThisMonth;
+    Color tagColor = Color(char.tagColorValue);
+    Color avatarBg = Color(char.avatarBgValue);
+    Color avatarFg = Color(char.avatarFgValue);
+
     return Container(
-      clipBehavior: Clip.antiAlias, // Ensures watermark stays inside
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(36),
         boxShadow: [
           BoxShadow(
-            color: char.tagColor.withValues(alpha: 0.05),
+            color: tagColor.withValues(alpha: 0.05),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -308,14 +423,13 @@ class _WealthScreenState extends State<WealthScreen> {
       ),
       child: Stack(
         children: [
-          // Background Icon Watermark
           Positioned(
             right: -24,
             bottom: -24,
             child: Icon(
-              char.icon,
+              IconData(char.iconCodePoint, fontFamily: 'MaterialIcons'),
               size: 160,
-              color: char.tagColor.withValues(alpha: 0.03),
+              color: tagColor.withValues(alpha: 0.03),
             ),
           ),
           Padding(
@@ -323,11 +437,9 @@ class _WealthScreenState extends State<WealthScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Area
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Enhanced Avatar
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
@@ -335,17 +447,13 @@ class _WealthScreenState extends State<WealthScreen> {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: char.avatarBg,
+                            color: avatarBg,
                             shape: BoxShape.circle,
                             boxShadow: [
-                              BoxShadow(
-                                color: char.avatarFg.withValues(alpha: 0.2),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
-                              ),
+                              BoxShadow(color: avatarFg.withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 6)),
                             ],
                           ),
-                          child: Icon(char.icon, color: char.avatarFg, size: 34),
+                          child: Icon(IconData(char.iconCodePoint, fontFamily: 'MaterialIcons'), color: avatarFg, size: 34),
                         ),
                         Positioned(
                           right: -4,
@@ -354,17 +462,16 @@ class _WealthScreenState extends State<WealthScreen> {
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: char.badgeColor,
+                              color: Color(char.badgeColorValue),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2.5),
                             ),
-                            child: Icon(char.badgeIcon, size: 12, color: Colors.white),
+                            child: Icon(IconData(char.badgeIconCodePoint, fontFamily: 'MaterialIcons'), size: 12, color: Colors.white),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(width: 20),
-                    // Name & Tags
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,153 +482,68 @@ class _WealthScreenState extends State<WealthScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: char.tagColor.withValues(alpha: 0.1),
+                                  color: tagColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(
-                                  char.tag,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                    color: char.tagColor,
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
+                                child: Text(char.tag, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: tagColor, letterSpacing: 1.0)),
                               ),
-                              Text(
-                                char.sideLabel,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.blueGrey.shade300,
-                                ),
-                              ),
+                              Text(char.sideLabel, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.blueGrey.shade300)),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            char.name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.textBlack,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
+                          Text(char.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: -0.5)),
                         ],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Quoted Message Bubble
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: char.avatarBg.withValues(alpha: 0.4),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                      bottomLeft: Radius.circular(4), // Tail effect
-                    ),
-                    border: Border.all(color: char.avatarBg.withValues(alpha: 0.8)),
+                    color: avatarBg.withValues(alpha: 0.4),
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20), bottomRight: Radius.circular(20), bottomLeft: Radius.circular(4)),
+                    border: Border.all(color: avatarBg.withValues(alpha: 0.8)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.format_quote_rounded, color: char.avatarFg.withValues(alpha: 0.4), size: 22),
+                      Icon(Icons.format_quote_rounded, color: avatarFg.withValues(alpha: 0.4), size: 22),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '"${char.message}"',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blueGrey.shade800,
-                            fontStyle: FontStyle.italic,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade800, fontStyle: FontStyle.italic, height: 1.5, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 28),
-                // Amount & Help Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Help amount',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blueGrey.shade400,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                        Text('Help amount', style: TextStyle(fontSize: 12, color: Colors.blueGrey.shade400, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 2),
-                        Text(
-                          format.format(char.amount),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.textBlack,
-                            letterSpacing: -1,
-                          ),
-                        ),
+                        Text(format.format(char.amount), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: -1)),
                       ],
                     ),
                     Container(
                       decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFFB800).withValues(alpha: 0.4),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
+                        boxShadow: [BoxShadow(color: (canHelp ? AppTheme.primaryGreen : Colors.grey).withValues(alpha: 0.4), blurRadius: 16, offset: const Offset(0, 6))],
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          provider.helpSave(char.name, char.amount, char.isGold);
-                          setState(() => _localImpact += char.amount);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Row(
-                                children: [
-                                  const Icon(Icons.favorite_rounded, color: Colors.white, size: 20),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      '${format.format(char.amount)} saved for ${char.name} 💚',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              backgroundColor: AppTheme.textBlack,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              margin: const EdgeInsets.all(20),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.favorite_rounded, size: 18),
-                        label: const Text(
-                          'HELP',
-                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
-                        ),
+                        onPressed: canHelp ? () => _startHelpProcess(char, provider) : null,
+                        icon: Icon(canHelp ? Icons.favorite_rounded : Icons.check_circle_rounded, size: 18),
+                        label: Text(canHelp ? 'HELP' : 'DONE', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFB800), // vibrant amber-gold
-                          foregroundColor: Colors.black87,
+                          backgroundColor: canHelp ? AppTheme.primaryGreen : Colors.grey.shade300,
+                          foregroundColor: canHelp ? Colors.black : Colors.grey,
                           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           elevation: 0,
@@ -531,6 +553,77 @@ class _WealthScreenState extends State<WealthScreen> {
                   ],
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProcessingOverlay() {
+    return Container(
+      color: Colors.white.withValues(alpha: 0.95),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!_isProcessingDone)
+            const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryGreen), strokeWidth: 8)
+          else
+            const Icon(Icons.check_circle_rounded, color: AppTheme.primaryGreen, size: 80),
+          const SizedBox(height: 40),
+          Text(
+            _isProcessingDone ? "Process Complete!" : "Inverse Gold Process Running...",
+            style: const TextStyle(color: AppTheme.textBlack, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: 1),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _isProcessingDone ? "Your impact is now secured into gold assets." : "Securing your impact into gold assets.",
+            style: const TextStyle(color: AppTheme.textGray, fontSize: 16),
+          ),
+          if (_isProcessingDone) ...[
+            const SizedBox(height: 48),
+            SizedBox(
+              width: 200,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _completeProcess,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text("DONE", style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThankYouOverlay() {
+    return Container(
+      color: AppTheme.primaryGreenSoft,
+      width: double.infinity,
+      height: double.infinity,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.favorite_rounded, color: AppTheme.primaryGreen, size: 200),
+          const SizedBox(height: 40),
+          const Text(
+            "THANK YOU!",
+            style: TextStyle(color: AppTheme.textBlack, fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -2),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              "${_currentActiveChar?.name} is very happy now! You've made a real difference today.",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.textGray, fontSize: 18, fontWeight: FontWeight.w600, height: 1.5),
             ),
           ),
         ],

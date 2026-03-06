@@ -1,11 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../providers/wealth_provider.dart';
 import '../theme/app_theme.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  late String _currentTime;
+  late String _currentDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime();
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    _currentTime = DateFormat('hh:mm a').format(now);
+    _currentDate = DateFormat('EEEE, d MMM').format(now);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<WealthProvider>(context);
+    final totalWealth = provider.totalWealth;
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0, locale: 'en_IN');
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       body: SafeArea(
@@ -14,17 +41,15 @@ class ProfileScreen extends StatelessWidget {
             _buildAppBar(),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 children: [
                   _buildProfileHeader(),
-                  const SizedBox(height: 48),
-                  _buildMenuButton(Icons.person_outline_rounded, "Account Details"),
-                  const SizedBox(height: 16),
-                  _buildMenuButton(Icons.lock_outline_rounded, "Privacy & Security"),
-                  const SizedBox(height: 16),
-                  _buildMenuButton(Icons.notifications_none_rounded, "Notifications"),
-                  const SizedBox(height: 16),
-                  _buildMenuButton(Icons.help_outline_rounded, "Help & Support"),
+                  const SizedBox(height: 24),
+                  _buildWealthQuickView(totalWealth, currencyFormat),
+                  const SizedBox(height: 32),
+                  _buildInfoSection(),
+                  const SizedBox(height: 32),
+                  _buildMenuSection(),
                   const SizedBox(height: 48),
                   _buildLogoutButton(),
                   const SizedBox(height: 40),
@@ -40,17 +65,16 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildAppBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Text(
-            'Profile',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textBlack,
-              letterSpacing: 0.5,
-            ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          const Text(
+            'My Identity',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: 0.5),
+          ),
+          Positioned(
+            right: 0,
+            child: Icon(Icons.settings_outlined, color: Colors.blueGrey.shade300, size: 24),
           ),
         ],
       ),
@@ -60,113 +84,171 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileHeader() {
     return Column(
       children: [
-        Container(
-          width: 110,
-          height: 110,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: const DecorationImage(
-              image: AssetImage('assets/image.png'),
-              fit: BoxFit.cover,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
+        Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                image: const DecorationImage(
+                  image: AssetImage('assets/image.png'),
+                  fit: BoxFit.cover,
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 25, offset: const Offset(0, 12)),
+                ],
+                border: Border.all(color: Colors.white, width: 4),
               ),
-            ],
-            border: Border.all(color: Colors.white, width: 4),
-          ),
+            ),
+            Container(
+              height: 32,
+              width: 32,
+              decoration: const BoxDecoration(color: AppTheme.primaryGreen, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]),
+              child: const Icon(Icons.edit_outlined, size: 16, color: Colors.black),
+            ),
+          ],
         ),
         const SizedBox(height: 20),
         const Text(
           "Master Wayne",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w900,
-            color: AppTheme.textBlack,
-            letterSpacing: -0.5,
-          ),
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: -1.0),
         ),
-        const SizedBox(height: 6),
-        Text(
-          "wayne@enterprises.com",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.blueGrey.shade400,
-          ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+             Icon(Icons.calendar_today_rounded, size: 12, color: Colors.blueGrey.shade300),
+             const SizedBox(width: 6),
+             Text(
+              "$_currentDate • $_currentTime",
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade300),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildMenuButton(IconData icon, String title) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+  Widget _buildWealthQuickView(double total, NumberFormat format) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 10)),
+        ],
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: AppTheme.primaryGreenSoft, shape: BoxShape.circle),
+            child: const Icon(Icons.account_balance_wallet_rounded, color: AppTheme.primaryGreen),
           ),
-          child: Row(
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 22, color: AppTheme.textBlack),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textBlack,
-                  ),
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.blueGrey.shade300),
+              const Text("Total Wealth", style: TextStyle(color: AppTheme.textGray, fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(format.format(total), style: const TextStyle(color: AppTheme.textBlack, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
             ],
           ),
+          const Spacer(),
+          Icon(Icons.chevron_right_rounded, color: Colors.blueGrey.shade100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    return Column(
+      children: [
+        _buildInfoTile(Icons.phone_iphone_rounded, "+91 98765 43210", "Verify Number"),
+        const SizedBox(height: 12),
+        _buildInfoTile(Icons.alternate_email_rounded, "wayne@enterprises.com", "Change Email"),
+      ],
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String value, String action) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.blueGrey.shade600),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textBlack)),
+          ),
+          Text(action, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.primaryGreen, letterSpacing: 0.2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(left: 4, bottom: 16),
+          child: Text("PREFERENCES", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.textGray, letterSpacing: 1.5)),
         ),
+        _buildMenuButton(Icons.security_rounded, "Privacy & Security"),
+        const SizedBox(height: 12),
+        _buildMenuButton(Icons.help_center_rounded, "Support Center"),
+      ],
+    );
+  }
+
+  Widget _buildMenuButton(IconData icon, String title) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.blueGrey.shade50, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 18, color: Colors.blueGrey.shade700),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textBlack)),
+          ),
+          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.blueGrey.shade200),
+        ],
       ),
     );
   }
 
   Widget _buildLogoutButton() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {},
+    return Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF0F0),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFFFCDD2)),
-          ),
-          child: const Text(
-            "Log Out",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFFD32F2F),
-              letterSpacing: 0.5,
-            ),
-          ),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
+      ),
+      child: const Center(
+        child: Text(
+          "SIGN OUT",
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFD32F2F), letterSpacing: 1.5),
         ),
       ),
     );

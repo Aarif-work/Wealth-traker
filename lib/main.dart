@@ -25,7 +25,7 @@ class PersonalWealthApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Wealth Tracker',
+      title: 'my wealth',
       theme: AppTheme.lightTheme,
       home: const MainLayout(),
     );
