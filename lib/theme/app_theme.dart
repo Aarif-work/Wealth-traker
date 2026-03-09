@@ -6,7 +6,7 @@ class AppTheme {
   static const Color primaryWhite = Colors.white;
   static const Color softGray = Color(0xFFF0F2F5);
   static const Color mediumGray = Color(0xFFE2E4E7);
-  static const Color textBlack = Color(0xFF1D1D1F); // Keep for text only
+  static const Color textBlack = Color(0xFF1A1F26); // Softer dark navy instead of black
   static const Color textGray = Color(0xFF6E6E73);
   static const Color surfaceLight = Color(0xFFFBFBFD);
   

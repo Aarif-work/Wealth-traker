@@ -46,12 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildProfileHeader(),
                   const SizedBox(height: 24),
                   _buildWealthQuickView(totalWealth, currencyFormat),
-                  const SizedBox(height: 32),
-                  _buildInfoSection(),
-                  const SizedBox(height: 32),
-                  _buildMenuSection(),
-                  const SizedBox(height: 48),
-                  _buildLogoutButton(),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -68,10 +62,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const Text(
-            'My Identity',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: 0.5),
-          ),
+          const SizedBox.shrink(),
           Positioned(
             right: 0,
             child: Icon(Icons.settings_outlined, color: Colors.blueGrey.shade300, size: 24),
@@ -165,92 +156,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildInfoSection() {
-    return Column(
-      children: [
-        _buildInfoTile(Icons.phone_iphone_rounded, "+91 98765 43210", "Verify Number"),
-        const SizedBox(height: 12),
-        _buildInfoTile(Icons.alternate_email_rounded, "wayne@enterprises.com", "Change Email"),
-      ],
-    );
-  }
 
-  Widget _buildInfoTile(IconData icon, String value, String action) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Colors.blueGrey.shade600),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppTheme.textBlack)),
-          ),
-          Text(action, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.primaryGreen, letterSpacing: 0.2)),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildMenuSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 16),
-          child: Text("PREFERENCES", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppTheme.textGray, letterSpacing: 1.5)),
-        ),
-        _buildMenuButton(Icons.security_rounded, "Privacy & Security"),
-        const SizedBox(height: 12),
-        _buildMenuButton(Icons.help_center_rounded, "Support Center"),
-      ],
-    );
-  }
-
-  Widget _buildMenuButton(IconData icon, String title) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.blueGrey.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, size: 18, color: Colors.blueGrey.shade700),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textBlack)),
-          ),
-          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.blueGrey.shade200),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogoutButton() {
-    return Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.red.withValues(alpha: 0.1)),
-      ),
-      child: const Center(
-        child: Text(
-          "SIGN OUT",
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFD32F2F), letterSpacing: 1.5),
-        ),
-      ),
-    );
-  }
 }

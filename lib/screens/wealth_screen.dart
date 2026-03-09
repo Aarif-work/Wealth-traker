@@ -60,7 +60,6 @@ class _WealthScreenState extends State<WealthScreen> {
   void _showAddCharacterSheet(BuildContext context, WealthProvider provider) {
     String name = "";
     double amount = 0;
-    int limit = 1;
     bool toGold = true;
 
     showModalBottomSheet(
@@ -91,34 +90,15 @@ class _WealthScreenState extends State<WealthScreen> {
                 onChanged: (val) => name = val,
               ),
               const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: "Amount (₹)",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (val) => amount = double.tryParse(val) ?? 0,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: "Limit (Times)",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      keyboardType: TextInputType.number,
-                      onChanged: (val) => limit = int.tryParse(val) ?? 1,
-                    ),
-                  ),
-                ],
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "Amount (₹)",
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                keyboardType: TextInputType.number,
+                onChanged: (val) => amount = double.tryParse(val) ?? 0,
               ),
               const SizedBox(height: 16),
-              const Text("Save Target:", style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
               Row(
                 children: [
                   ChoiceChip(
@@ -148,7 +128,6 @@ class _WealthScreenState extends State<WealthScreen> {
                         tag: 'PERSONAL',
                         tagColorValue: 0xFF1B5E20,
                         name: name,
-                        sideLabel: 'Goal: ₹50k',
                         message: 'Every help matters for our destiny.',
                         amount: amount,
                         iconCodePoint: 0xe491, // person_rounded
@@ -157,14 +136,13 @@ class _WealthScreenState extends State<WealthScreen> {
                         badgeIconCodePoint: 0xe5fa, // stars_rounded
                         badgeColorValue: 0xFF00F04F,
                         isGold: toGold,
-                        maxTimes: limit,
                       ));
                       Navigator.pop(context);
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryGreen,
-                    foregroundColor: Colors.black,
+                    foregroundColor: AppTheme.textBlack,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
@@ -283,12 +261,12 @@ class _WealthScreenState extends State<WealthScreen> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: AppTheme.textBlack.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: AppTheme.textBlack.withValues(alpha: 0.04)),
       ),
       child: Icon(icon, size: 20, color: AppTheme.textBlack),
     );
@@ -419,7 +397,7 @@ class _WealthScreenState extends State<WealthScreen> {
             offset: const Offset(0, 15),
           ),
         ],
-        border: Border.all(color: Colors.black.withValues(alpha: 0.02), width: 1.5),
+        border: Border.all(color: AppTheme.textBlack.withValues(alpha: 0.02), width: 1.5),
       ),
       child: Stack(
         children: [
@@ -476,9 +454,6 @@ class _WealthScreenState extends State<WealthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
@@ -487,9 +462,6 @@ class _WealthScreenState extends State<WealthScreen> {
                                 ),
                                 child: Text(char.tag, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: tagColor, letterSpacing: 1.0)),
                               ),
-                              Text(char.sideLabel, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.blueGrey.shade300)),
-                            ],
-                          ),
                           const SizedBox(height: 8),
                           Text(char.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: -0.5)),
                         ],
@@ -543,7 +515,7 @@ class _WealthScreenState extends State<WealthScreen> {
                         label: Text(canHelp ? 'HELP' : 'DONE', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: canHelp ? AppTheme.primaryGreen : Colors.grey.shade300,
-                          foregroundColor: canHelp ? Colors.black : Colors.grey,
+                          foregroundColor: canHelp ? AppTheme.textBlack : Colors.grey,
                           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           elevation: 0,
@@ -590,7 +562,7 @@ class _WealthScreenState extends State<WealthScreen> {
                 onPressed: _completeProcess,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryGreen,
-                  foregroundColor: Colors.black,
+                  foregroundColor: AppTheme.textBlack,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),

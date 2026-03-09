@@ -107,7 +107,7 @@ class HomeScreen extends StatelessWidget {
         border: Border.all(color: AppTheme.softGray.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-          color: Colors.black.withValues(alpha: 0.04),
+          color: AppTheme.textBlack.withValues(alpha: 0.04),
           blurRadius: 30,
           offset: const Offset(0, 15),
         ),
@@ -278,7 +278,7 @@ class HomeScreen extends StatelessWidget {
         border: Border.all(color: AppTheme.softGray.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppTheme.textBlack.withValues(alpha: 0.04),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -397,7 +397,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Almost there! You\'ve reached ${provider.digitalGoldGrams}g of your ${provider.goldGoldInGrams}g goal.',
+                  'Almost there! You\'ve reached ${provider.digitalGoldGrams}g of your ${provider.activeGoldGoalGrams}g goal.',
                   style: TextStyle(
                     color: Colors.blueGrey.shade600,
                     fontSize: 13,
@@ -415,14 +415,14 @@ class HomeScreen extends StatelessWidget {
                 width: 60,
                 height: 60,
                 child: CircularProgressIndicator(
-                  value: provider.goldRatio,
+                  value: provider.activeGoldRatio,
                   strokeWidth: 6,
                   backgroundColor: const Color(0xFFFFF3CD),
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFFD54F)),
                 ),
               ),
               Text(
-                '${(provider.goldRatio * 100).toInt()}%',
+                '${(provider.activeGoldRatio * 100).toInt()}%',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,

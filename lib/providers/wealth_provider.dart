@@ -18,6 +18,30 @@ class Lending {
   });
 }
 
+class FinancialGoal {
+  final String id;
+  final double targetWealth;
+  final double targetGoldGrams;
+  final int targetHelpActivities;
+  final double startingWealth;
+  final double startingGoldGrams;
+  final int startingHelpCount;
+  final DateTime startDate;
+  bool isCompleted;
+
+  FinancialGoal({
+    required this.id,
+    required this.targetWealth,
+    required this.targetGoldGrams,
+    required this.targetHelpActivities,
+    required this.startingWealth,
+    required this.startingGoldGrams,
+    required this.startingHelpCount,
+    required this.startDate,
+    this.isCompleted = false,
+  });
+}
+
 class Transaction {
   final String id;
   final String title;
@@ -39,7 +63,6 @@ class HelpCharacter {
   final String tag;
   final int tagColorValue;
   final String name;
-  final String sideLabel;
   final String message;
   final double amount;
   final int iconCodePoint;
@@ -48,7 +71,6 @@ class HelpCharacter {
   final int badgeIconCodePoint;
   final int badgeColorValue;
   final bool isGold;
-  final int maxTimes;
   int currentHelpedCount;
   DateTime? lastHelpedDate;
 
@@ -57,7 +79,6 @@ class HelpCharacter {
     required this.tag,
     required this.tagColorValue,
     required this.name,
-    required this.sideLabel,
     required this.message,
     required this.amount,
     required this.iconCodePoint,
@@ -66,7 +87,6 @@ class HelpCharacter {
     required this.badgeIconCodePoint,
     required this.badgeColorValue,
     required this.isGold,
-    this.maxTimes = 12, // Default limit
     this.currentHelpedCount = 0,
     this.lastHelpedDate,
   });
@@ -74,17 +94,30 @@ class HelpCharacter {
   bool get canHelpThisMonth {
     if (lastHelpedDate == null) return true;
     final now = DateTime.now();
-    return (lastHelpedDate!.month != now.month || lastHelpedDate!.year != now.year) && currentHelpedCount < maxTimes;
+    return (lastHelpedDate!.month != now.month || lastHelpedDate!.year != now.year);
   }
 }
 
 class WealthProvider with ChangeNotifier {
   double _cashSavings = 12500.0;
-  final double _cashSavingsGoal = 25000.0; // Goal: $250,000
+  final double _cashSavingsGoal = 25000.0; 
+  
   double _digitalGoldInGrams = 0.45; // 0.45 grams
-  final double _goldGoldInGrams = 1.0; // Goal: 1 gram
   final double _goldPricePerGram = 6500.0; // Simulated gold price
   final double _lendingLimit = 2000.0; // Monthly lending limit
+
+  final List<FinancialGoal> _goals = [
+    FinancialGoal(
+      id: 'g1',
+      targetWealth: 50000.0,
+      targetGoldGrams: 1.0,
+      targetHelpActivities: 5,
+      startingWealth: 10000.0,
+      startingGoldGrams: 0.4,
+      startingHelpCount: 2,
+      startDate: DateTime.now().subtract(const Duration(days: 10)),
+    ),
+  ];
 
   final List<HelpCharacter> _characters = [
     HelpCharacter(
@@ -92,7 +125,6 @@ class WealthProvider with ChangeNotifier {
       tag: 'WIFE',
       tagColorValue: 0xFFFFA000,
       name: 'Future Home',
-      sideLabel: 'Target: ₹2L',
       message: 'Could you help with our future home? Every little bit counts.',
       amount: 500.0,
       iconCodePoint: 0xe6bb, // woman_rounded
@@ -107,7 +139,6 @@ class WealthProvider with ChangeNotifier {
       tag: 'MOTHER',
       tagColorValue: 0xFF1976D2,
       name: 'Healthcare Fund',
-      sideLabel: 'Safety Net',
       message: 'Let\'s save for medicine, just in case. Health comes first.',
       amount: 200.0,
       iconCodePoint: 0xe21f, // elderly_woman_rounded
@@ -165,12 +196,61 @@ class WealthProvider with ChangeNotifier {
   double get cashSavingsGoal => _cashSavingsGoal;
   double get savingsRatio => (_cashSavings / _cashSavingsGoal).clamp(0.0, 1.0);
   double get digitalGoldGrams => _digitalGoldInGrams;
-  double get goldGoldInGrams => _goldGoldInGrams;
-  double get goldRatio => (_digitalGoldInGrams / _goldGoldInGrams).clamp(0.0, 1.0);
+  double get goldPricePerGram => _goldPricePerGram;
   double get goldValue => _digitalGoldInGrams * _goldPricePerGram;
   double get totalWealth => _cashSavings + goldValue;
+  List<FinancialGoal> get goals => [..._goals];
+  
+  double get activeGoldGoalGrams {
+    if (_goals.isEmpty) return 1.0;
+    return _goals.last.targetGoldGrams;
+  }
+  
+  double get activeGoldRatio {
+    if (_goals.isEmpty) return (_digitalGoldInGrams / 1.0).clamp(0.0, 1.0);
+    final goal = _goals.last;
+    final currentGoldGained = (_digitalGoldInGrams - goal.startingGoldGrams).clamp(0.0, 999.0);
+    return (currentGoldGained / goal.targetGoldGrams).clamp(0.0, 1.0);
+  }
+
+  // Total help activities for lifetime
+  int get totalHelpActivitiesCount => _transactions.where((t) => t.title.startsWith('Help Save')).length;
+
   List<Transaction> get transactions => [..._transactions.reversed];
   List<HelpCharacter> get characters => _characters;
+  
+  void addNewGoal(double wealthTarget, double goldTarget, int helpTarget) {
+    _goals.add(FinancialGoal(
+      id: DateTime.now().toString(),
+      targetWealth: wealthTarget,
+      targetGoldGrams: goldTarget,
+      targetHelpActivities: helpTarget,
+      startingWealth: totalWealth,
+      startingGoldGrams: _digitalGoldInGrams,
+      startingHelpCount: totalHelpActivitiesCount,
+      startDate: DateTime.now(),
+    ));
+    notifyListeners();
+  }
+
+  void updateGoal(String id, double wealthTarget, double goldTarget, int helpTarget) {
+    final index = _goals.indexWhere((g) => g.id == id);
+    if (index != -1) {
+      final old = _goals[index];
+      _goals[index] = FinancialGoal(
+        id: old.id,
+        targetWealth: wealthTarget,
+        targetGoldGrams: goldTarget,
+        targetHelpActivities: helpTarget,
+        startingWealth: old.startingWealth,
+        startingGoldGrams: old.startingGoldGrams,
+        startingHelpCount: old.startingHelpCount,
+        startDate: old.startDate,
+        isCompleted: old.isCompleted,
+      );
+      notifyListeners();
+    }
+  }
   List<Lending> get lendingList => [..._lendingList];
   double get lendingLimit => _lendingLimit;
   double get currentLent => _lendingList.where((l) => !l.isReturned).fold(0.0, (sum, l) => sum + l.amount);

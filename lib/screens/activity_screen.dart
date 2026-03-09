@@ -155,12 +155,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: AppTheme.textBlack.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
+        border: Border.all(color: AppTheme.textBlack.withValues(alpha: 0.04)),
       ),
       child: Icon(icon, size: 20, color: color ?? AppTheme.textBlack),
     );
@@ -212,13 +212,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
                   ),
                 ] : [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: AppTheme.textBlack.withValues(alpha: 0.04),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
                 border: Border.all(
-                  color: isSelected ? activeColor : Colors.black.withValues(alpha: 0.06),
+                  color: isSelected ? activeColor : AppTheme.textBlack.withValues(alpha: 0.06),
                   width: 1.5,
                 ),
               ),
@@ -310,12 +310,12 @@ class _ActivityScreenState extends State<ActivityScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: AppTheme.textBlack.withValues(alpha: 0.03),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: Colors.black.withValues(alpha: 0.03)),
+        border: Border.all(color: AppTheme.textBlack.withValues(alpha: 0.03)),
       ),
       child: Row(
         children: [

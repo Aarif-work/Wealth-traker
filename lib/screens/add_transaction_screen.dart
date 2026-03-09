@@ -265,9 +265,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     boxShadow: isSelected ? [
                       BoxShadow(color: (cat['color'] as Color).withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))
                     ] : [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 5, offset: const Offset(0, 2))
+                      BoxShadow(color: AppTheme.textBlack.withValues(alpha: 0.03), blurRadius: 5, offset: const Offset(0, 2))
                     ],
-                    border: isSelected ? null : Border.all(color: Colors.black.withValues(alpha: 0.04)),
+                    border: isSelected ? null : Border.all(color: AppTheme.textBlack.withValues(alpha: 0.04)),
                   ),
                   child: Row(
                     children: [
@@ -460,12 +460,12 @@ class _TactileButtonState extends State<_TactileButton> with SingleTickerProvide
               boxShadow: [
                 if (!widget.isAction)
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: AppTheme.textBlack.withValues(alpha: 0.04),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
               ],
-              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              border: Border.all(color: AppTheme.textBlack.withValues(alpha: 0.05)),
             ),
             child: widget.child,
           ),

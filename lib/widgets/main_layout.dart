@@ -3,7 +3,7 @@ import '../theme/app_theme.dart';
 import '../screens/home_screen.dart';
 import '../screens/activity_screen.dart';
 import '../screens/wealth_screen.dart';
-import '../screens/profile_screen.dart';
+import '../screens/goals_screen.dart';
 import '../screens/add_transaction_screen.dart';
 
 
@@ -22,7 +22,7 @@ class _MainLayoutState extends State<MainLayout> {
     const ActivityScreen(),
     const SizedBox.shrink(), // Placeholder for Add
     const WealthScreen(),
-    const ProfileScreen(),
+    const GoalsScreen(),
   ];
 
   @override
@@ -44,7 +44,7 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04), // Soft subtle shadow
+            color: AppTheme.textBlack.withValues(alpha: 0.04), // Soft subtle shadow
             blurRadius: 30,
             offset: const Offset(0, -10),
           ),
@@ -61,7 +61,7 @@ class _MainLayoutState extends State<MainLayout> {
               _buildNavItem(1, Icons.history_rounded, "History"),
               _buildAddButton(),
               _buildNavItem(3, Icons.favorite_outline_rounded, "Save", activeIcon: Icons.favorite_rounded),
-              _buildNavItem(4, Icons.person_outline_rounded, "Profile", activeIcon: Icons.person_rounded),
+              _buildNavItem(4, Icons.track_changes_rounded, "Milestones", activeIcon: Icons.track_changes_rounded),
             ],
           ),
         ),
@@ -137,7 +137,7 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         child: const Icon(
           Icons.add_rounded,
-          color: Colors.black,
+          color: AppTheme.textBlack,
           size: 28,
         ),
       ),
