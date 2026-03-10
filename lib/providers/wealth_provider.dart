@@ -198,7 +198,7 @@ class WealthProvider with ChangeNotifier {
   double get digitalGoldGrams => _digitalGoldInGrams;
   double get goldPricePerGram => _goldPricePerGram;
   double get goldValue => _digitalGoldInGrams * _goldPricePerGram;
-  double get totalWealth => _cashSavings + goldValue;
+  double get totalWealth => goldValue; // Total Wealth is now defined as exclusively Gold Value
   List<FinancialGoal> get goals => [..._goals];
   
   double get activeGoldGoalGrams {
@@ -276,6 +276,23 @@ class WealthProvider with ChangeNotifier {
         .where((t) => t.type == TransactionType.gold && t.date.month == now.month && t.date.year == now.year)
         .fold(0.0, (sum, t) => sum + t.amount);
   }
+
+  double get availableBalance {
+    final income = _transactions
+        .where((t) => t.type == TransactionType.income)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expenses = _transactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final goldSpent = _transactions
+        .where((t) => t.type == TransactionType.gold)
+        .fold(0.0, (sum, t) => sum + t.amount);
+        
+    // Balance is purely money from salary/income minus what was spent on expenses and gold
+    return income - expenses - goldSpent;
+  }
+
+  double get bankBalance => availableBalance;
 
   double get netBalance => monthlyIncome - monthlyExpenses - monthlyGoldAmount;
 

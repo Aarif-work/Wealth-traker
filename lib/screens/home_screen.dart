@@ -166,26 +166,54 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildMonthlyStats(WealthProvider provider, NumberFormat format) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildStatCard(
-            'MONTHLY SPENDING',
-            format.format(provider.monthlyExpenses),
-            Icons.arrow_downward_rounded,
-            const Color(0xFFFF8A80), // Soft red
-            0.4, // Simplified ratio for UI
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'BANK BALANCE',
+                format.format(provider.bankBalance),
+                Icons.account_balance_wallet_rounded,
+                const Color(0xFF42A5F5), // Soft Blue
+                (provider.bankBalance / (provider.bankBalance + provider.totalWealth > 0 ? provider.bankBalance + provider.totalWealth : 1.0)).clamp(0.0, 1.0),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                'THIS MONTH GOLD INVERS',
+                format.format(provider.monthlyGoldAmount),
+                Icons.auto_awesome_rounded,
+                const Color(0xFFFFD54F), // Gold
+                provider.activeGoldRatio,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildStatCard(
-            'MONTHLY INCOME',
-            format.format(provider.monthlyIncome),
-            Icons.arrow_upward_rounded,
-            AppTheme.primaryGreen,
-            0.7, // Simplified ratio for UI
-          ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                'MONTHLY SPENDING',
+                format.format(provider.monthlyExpenses),
+                Icons.arrow_downward_rounded,
+                const Color(0xFFFF8A80), // Soft red
+                0.4, // Simplified ratio for UI
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                'MONTHLY INCOME',
+                format.format(provider.monthlyIncome),
+                Icons.arrow_upward_rounded,
+                AppTheme.primaryGreen,
+                0.7, // Simplified ratio for UI
+              ),
+            ),
+          ],
         ),
       ],
     );
