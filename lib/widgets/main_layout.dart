@@ -15,12 +15,37 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
+  late PageController _pageController;
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  // Helper to map bottom nav index to PageView index
+  int _navToPage(int index) {
+    if (index < 2) return index;
+    if (index > 2) return index - 1;
+    return 0; // Fallback
+  }
+
+  // Helper to map PageView index to bottom nav index
+  int _pageToNav(int index) {
+    if (index < 2) return index;
+    return index + 1;
+  }
 
   final List<Widget> _pages = [
     const HomeScreen(),
     const ActivityScreen(),
-    const SizedBox.shrink(), // Placeholder for Add
     const WealthScreen(),
     const GoalsScreen(),
   ];
@@ -29,7 +54,15 @@ class _MainLayoutState extends State<MainLayout> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
-      body: _pages[_currentIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = _pageToNav(index);
+          });
+        },
+        children: _pages,
+      ),
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
@@ -72,7 +105,13 @@ class _MainLayoutState extends State<MainLayout> {
   Widget _buildNavItem(int index, IconData icon, String label, {IconData? activeIcon}) {
     bool isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () {
+        _pageController.animateToPage(
+          _navToPage(index),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 64,
