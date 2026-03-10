@@ -60,22 +60,24 @@ class _ActivityScreenState extends State<ActivityScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
+                  if (filteredTransactions.isEmpty)
+                    _buildEmptyState(),
                   if (todayTransactions.isNotEmpty) ...[
                     _buildSectionHeader("TODAY"),
                     const SizedBox(height: 16),
-                    ...todayTransactions.map((tx) => _buildTransactionCard(tx, currencyFormat)),
+                    ...todayTransactions.map((tx) => _buildDismissibleCard(tx, currencyFormat, wealthProvider)),
                   ],
                   if (yesterdayTransactions.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _buildSectionHeader("YESTERDAY"),
                     const SizedBox(height: 16),
-                    ...yesterdayTransactions.map((tx) => _buildTransactionCard(tx, currencyFormat)),
+                    ...yesterdayTransactions.map((tx) => _buildDismissibleCard(tx, currencyFormat, wealthProvider)),
                   ],
                   if (olderTransactions.isNotEmpty) ...[
                     const SizedBox(height: 24),
                     _buildSectionHeader("OLDER"),
                     const SizedBox(height: 16),
-                    ...olderTransactions.map((tx) => _buildTransactionCard(tx, currencyFormat)),
+                    ...olderTransactions.map((tx) => _buildDismissibleCard(tx, currencyFormat, wealthProvider)),
                   ],
                   const SizedBox(height: 100), // Space for FAB/Bottom nav
                 ],
@@ -84,6 +86,92 @@ class _ActivityScreenState extends State<ActivityScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 100),
+        Icon(Icons.search_off_rounded, size: 80, color: Colors.blueGrey.shade100),
+        const SizedBox(height: 24),
+        Text(
+          "No records found",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade300),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Try adjusting your filters or search query",
+          style: TextStyle(fontSize: 14, color: Colors.blueGrey.shade200),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDismissibleCard(Transaction tx, NumberFormat format, WealthProvider provider) {
+    return Dismissible(
+      key: Key(tx.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 28),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: AppTheme.expenseRed,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
+      ),
+      onDismissed: (direction) {
+        provider.deleteTransaction(tx.id);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${tx.title} deleted"),
+            backgroundColor: AppTheme.textBlack,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          ),
+        );
+      },
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+              title: const Text(
+                "Delete Record?",
+                style: TextStyle(fontWeight: FontWeight.w900, color: AppTheme.textBlack),
+              ),
+              content: const Text(
+                "This will permanently remove this transaction and reverse its impact on your balance. Are you sure?",
+                style: TextStyle(color: AppTheme.textGray, fontSize: 14, height: 1.5),
+              ),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text("CANCEL", style: TextStyle(color: AppTheme.textGray, fontWeight: FontWeight.bold)),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.expenseRed,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.w900)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: _buildTransactionCard(tx, format),
     );
   }
 
@@ -352,6 +440,25 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                if (tx.note.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.softGray.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      tx.note,
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.blueGrey.shade600,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

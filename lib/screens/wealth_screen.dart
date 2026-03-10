@@ -57,6 +57,37 @@ class _WealthScreenState extends State<WealthScreen> {
     }
   }
 
+  void _confirmDeleteCharacter(BuildContext context, HelpCharacter char, WealthProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text("Delete Character?", style: TextStyle(fontWeight: FontWeight.w900)),
+        content: Text("Are you sure you want to remove ${char.name}? This cannot be undone."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("CANCEL", style: TextStyle(color: AppTheme.textGray, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              provider.deleteCharacter(char.id);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade50,
+              foregroundColor: Colors.red,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text("DELETE", style: TextStyle(fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddCharacterSheet(BuildContext context, WealthProvider provider) {
     String name = "";
     double amount = 0;
@@ -454,6 +485,9 @@ class _WealthScreenState extends State<WealthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
@@ -462,6 +496,13 @@ class _WealthScreenState extends State<WealthScreen> {
                                 ),
                                 child: Text(char.tag, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: tagColor, letterSpacing: 1.0)),
                               ),
+                              if (char.currentHelpedCount == 0)
+                                GestureDetector(
+                                  onTap: () => _confirmDeleteCharacter(context, char, provider),
+                                  child: Icon(Icons.delete_outline_rounded, color: Colors.red.withValues(alpha: 0.3), size: 20),
+                                ),
+                            ],
+                          ),
                           const SizedBox(height: 8),
                           Text(char.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.textBlack, letterSpacing: -0.5)),
                         ],

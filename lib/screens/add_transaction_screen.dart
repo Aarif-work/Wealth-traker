@@ -13,16 +13,24 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   bool isExpense = true;
   String amount = "0";
-  String? selectedCategory = "Food";
+  String? selectedCategory;
 
-  final List<Map<String, dynamic>> categories = [
-    {"label": "Food", "icon": Icons.restaurant_rounded, "color": const Color(0xFFFFB74D)}, // Soft Orange
+  final List<Map<String, dynamic>> incomeCategories = [
     {"label": "Salary", "icon": Icons.wallet_rounded, "color": AppTheme.primaryGreen},
-    {"label": "Investment", "icon": Icons.trending_up_rounded, "color": const Color(0xFF64B5F6)}, // Soft Blue
-    {"label": "Rent", "icon": Icons.home_rounded, "color": const Color(0xFFBA68C8)}, // Soft Purple
-    {"label": "Shopping", "icon": Icons.shopping_bag_rounded, "color": const Color(0xFFF06292)}, // Soft Pink
-    {"label": "Health", "icon": Icons.health_and_safety_rounded, "color": const Color(0xFFE57373)}, // Soft Red
-    {"label": "Other", "icon": Icons.more_horiz_rounded, "color": Colors.blueGrey.shade100},
+    {"label": "Govt Amount", "icon": Icons.account_balance_rounded, "color": const Color(0xFF64B5F6)},
+    {"label": "Family", "icon": Icons.family_restroom_rounded, "color": const Color(0xFFBA68C8)},
+    {"label": "Others", "icon": Icons.more_horiz_rounded, "color": Colors.blueGrey.shade100},
+  ];
+
+  final List<Map<String, dynamic>> expenseCategories = [
+    {"label": "Food", "icon": Icons.restaurant_rounded, "color": const Color(0xFFFFB74D)},
+    {"label": "Transport", "icon": Icons.directions_bus_rounded, "color": const Color(0xFF90A4AE)},
+    {"label": "Family", "icon": Icons.family_restroom_rounded, "color": const Color(0xFFBA68C8)}, 
+    {"label": "Shopping", "icon": Icons.shopping_bag_rounded, "color": const Color(0xFFF06292)},
+    {"label": "Education", "icon": Icons.school_rounded, "color": const Color(0xFF7986CB)},
+    {"label": "Data Pack", "icon": Icons.network_check_rounded, "color": const Color(0xFF4DD0E1)},
+    {"label": "Digital Gold", "icon": Icons.auto_awesome_rounded, "color": const Color(0xFFFFD54F)},
+    {"label": "Others", "icon": Icons.more_horiz_rounded, "color": Colors.blueGrey.shade100},
   ];
 
   void _onNumberPressed(String value) {
@@ -57,6 +65,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     return Scaffold(
       backgroundColor: bgGradientColor,
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
@@ -88,37 +97,38 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         },
         child: Column(
           children: [
-          const SizedBox(height: 16),
-          _buildToggle(themeColor),
-          const SizedBox(height: 32),
-          _buildAmountDisplay(themeColor),
-          const SizedBox(height: 32),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
-                boxShadow: [
-                  BoxShadow(color: themeColor.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, -10)),
-                ],
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 32),
-                  _buildCategoryList(),
-                  const Spacer(),
-                  _buildKeypad(),
-                  const SizedBox(height: 24),
-                  _buildSaveButton(wealthProvider, themeColor),
-                  const SizedBox(height: 32),
-                ],
+            const SizedBox(height: 16),
+            _buildToggle(themeColor),
+            const SizedBox(height: 32),
+            _buildAmountDisplay(themeColor),
+            const SizedBox(height: 32),
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(40)),
+                  boxShadow: [
+                    BoxShadow(color: themeColor.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, -10)),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    _buildCategoryList(),
+                    const Spacer(),
+                    _buildKeypad(),
+                    const SizedBox(height: 24),
+                    _buildSaveButton(wealthProvider, themeColor),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildToggle(Color activeColor) {
@@ -233,6 +243,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildCategoryList() {
+    final currentCategories = isExpense ? expenseCategories : incomeCategories;
+    
+    // Auto-select first category if current selection is invalid
+    if (selectedCategory == null || !currentCategories.any((c) => c['label'] == selectedCategory)) {
+      selectedCategory = currentCategories.first['label'];
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -249,9 +266,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: categories.length,
+            itemCount: currentCategories.length,
             itemBuilder: (context, index) {
-              final cat = categories[index];
+              final cat = currentCategories[index];
               final isSelected = selectedCategory == cat['label'];
               return GestureDetector(
                 onTap: () => setState(() => selectedCategory = cat['label']),
@@ -365,9 +382,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             final double val = double.tryParse(amount) ?? 0.0;
             if (val > 0) {
               if (isExpense) {
-                provider.addExpense(selectedCategory ?? "Other", val);
+                if (selectedCategory == "Digital Gold") {
+                  provider.buyGoldByAmount(val);
+                } else {
+                  provider.addExpense(selectedCategory ?? "Others", val);
+                }
               } else {
-                provider.addIncome(selectedCategory ?? "Other", val);
+                provider.addIncome(selectedCategory ?? "Others", val);
               }
               Navigator.pop(context);
             }

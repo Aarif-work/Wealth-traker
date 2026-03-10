@@ -48,6 +48,7 @@ class Transaction {
   final double amount;
   final DateTime date;
   final TransactionType type;
+  final String note;
 
   Transaction({
     required this.id,
@@ -55,6 +56,7 @@ class Transaction {
     required this.amount,
     required this.date,
     required this.type,
+    this.note = "",
   });
 }
 
@@ -302,6 +304,11 @@ class WealthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void deleteCharacter(String id) {
+    _characters.removeWhere((c) => c.id == id);
+    notifyListeners();
+  }
+
   void addLending(String name, double amount, DateTime dueDate) {
     _lendingList.add(Lending(
       id: DateTime.now().toString(),
@@ -367,20 +374,21 @@ class WealthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void addIncome(String title, double amount) {
+  void addIncome(String title, double amount, {String note = ""}) {
     final newTransaction = Transaction(
       id: DateTime.now().toString(),
       title: title,
       amount: amount,
       date: DateTime.now(),
       type: TransactionType.income,
+      note: note,
     );
     _cashSavings += amount;
     _transactions.add(newTransaction);
     notifyListeners();
   }
 
-  void addExpense(String title, double amount) {
+  void addExpense(String title, double amount, {String note = ""}) {
     if (_cashSavings < amount) return; // Simple check
     final newTransaction = Transaction(
       id: DateTime.now().toString(),
@@ -388,6 +396,7 @@ class WealthProvider with ChangeNotifier {
       amount: amount,
       date: DateTime.now(),
       type: TransactionType.expense,
+      note: note,
     );
     _cashSavings -= amount;
     _transactions.add(newTransaction);
@@ -406,6 +415,50 @@ class WealthProvider with ChangeNotifier {
       type: TransactionType.gold,
     );
     _cashSavings -= cost;
+    _digitalGoldInGrams += grams;
+    _transactions.add(newTransaction);
+    notifyListeners();
+  }
+
+  void deleteTransaction(String id) {
+    final index = _transactions.indexWhere((t) => t.id == id);
+    if (index != -1) {
+      final tx = _transactions[index];
+      
+      // Reverse the financial impact
+      if (tx.type == TransactionType.income) {
+        _cashSavings -= tx.amount;
+      } else if (tx.type == TransactionType.expense) {
+        _cashSavings += tx.amount;
+      } else if (tx.type == TransactionType.gold) {
+        // Find if it was a gold purchase to reverse grams
+        // We can estimate grams if not stored explicitly, or search the title
+        // In this app, many gold transactions are in the title 'Bought Xg Gold'
+        // or from HelpCharacters. For simplicity, we use the price at transaction time logic
+        // or just reverse the cash and estimate grams.
+        _cashSavings += tx.amount;
+        final grams = tx.amount / _goldPricePerGram;
+        _digitalGoldInGrams -= grams;
+      }
+      
+      _transactions.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  void buyGoldByAmount(double amount, {String note = ""}) {
+    if (_cashSavings < amount) return;
+    final grams = amount / _goldPricePerGram;
+    
+    final newTransaction = Transaction(
+      id: DateTime.now().toString(),
+      title: 'Digital Gold',
+      amount: amount,
+      date: DateTime.now(),
+      type: TransactionType.gold,
+      note: note,
+    );
+    _cashSavings -= amount;
     _digitalGoldInGrams += grams;
     _transactions.add(newTransaction);
     notifyListeners();
