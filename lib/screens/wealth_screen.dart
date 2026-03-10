@@ -15,7 +15,6 @@ class WealthScreen extends StatefulWidget {
 }
 
 class _WealthScreenState extends State<WealthScreen> {
-  final double _localImpact = 4250.0;
   bool _isProcessing = false;
   bool _isProcessingDone = false;
   bool _showThankYou = false;
@@ -196,7 +195,7 @@ class _WealthScreenState extends State<WealthScreen> {
     final helpSaveTotal = provider.transactions
         .where((tx) => tx.title.startsWith('Help Save:'))
         .fold(0.0, (sum, tx) => sum + tx.amount);
-    final displayImpact = _localImpact + helpSaveTotal;
+    final displayImpact = helpSaveTotal;
 
     return Stack(
       children: [

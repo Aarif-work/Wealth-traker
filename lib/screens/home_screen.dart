@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../providers/wealth_provider.dart';
 import '../theme/app_theme.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,7 +21,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: 24),
               _buildTotalWealthCard(wealthProvider, currencyFormat),
               const SizedBox(height: 24),
@@ -50,7 +51,7 @@ class HomeScreen extends StatelessWidget {
     return 'Good Evening!';
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     final now = DateTime.now();
     final dateStr = DateFormat('EEEE, dd MMMM').format(now);
     
@@ -80,14 +81,35 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        Text(
-          dateStr.toUpperCase(),
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            color: AppTheme.primaryGreen,
-            letterSpacing: 1.0,
-          ),
+        Row(
+          children: [
+            Text(
+              dateStr.toUpperCase(),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                color: AppTheme.primaryGreen,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(width: 16),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreenSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.person_rounded, size: 20, color: AppTheme.primaryGreen),
+              ),
+            ),
+          ],
         ),
       ],
     );

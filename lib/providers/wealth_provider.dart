@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../services/database_service.dart';
 
 enum TransactionType { income, expense, gold }
 
@@ -101,97 +103,119 @@ class HelpCharacter {
 }
 
 class WealthProvider with ChangeNotifier {
-  double _cashSavings = 12500.0;
-  final double _cashSavingsGoal = 25000.0; 
-  
-  double _digitalGoldInGrams = 0.45; // 0.45 grams
-  final double _goldPricePerGram = 6500.0; // Simulated gold price
-  final double _lendingLimit = 2000.0; // Monthly lending limit
+  final DatabaseService _dbService = DatabaseService();
+  bool _isInitialized = false;
 
-  final List<FinancialGoal> _goals = [
+  double _cashSavings = 0.0;
+  final double _cashSavingsGoal = double.parse(dotenv.get('CASH_SAVINGS_GOAL', fallback: '25000.0')); 
+  
+  double _digitalGoldInGrams = 0.0;
+  final double _goldPricePerGram = double.parse(dotenv.get('GOLD_PRICE_PER_GRAM', fallback: '6500.0')); 
+  final double _lendingLimit = double.parse(dotenv.get('LENDING_LIMIT', fallback: '2000.0')); 
+
+  List<FinancialGoal> _goals = [
     FinancialGoal(
-      id: 'g1',
+      id: 'g-initial',
       targetWealth: 50000.0,
       targetGoldGrams: 1.0,
       targetHelpActivities: 5,
-      startingWealth: 10000.0,
-      startingGoldGrams: 0.4,
-      startingHelpCount: 2,
-      startDate: DateTime.now().subtract(const Duration(days: 10)),
+      startingWealth: 0.0,
+      startingGoldGrams: 0.0,
+      startingHelpCount: 0,
+      startDate: DateTime.now(),
     ),
   ];
 
-  final List<HelpCharacter> _characters = [
-    HelpCharacter(
-      id: 'c1',
-      tag: 'WIFE',
-      tagColorValue: 0xFFFFA000,
-      name: 'Future Home',
-      message: 'Could you help with our future home? Every little bit counts.',
-      amount: 500.0,
-      iconCodePoint: 0xe6bb, // woman_rounded
-      avatarBgValue: 0xFFFFF3E0,
-      avatarFgValue: 0xFFFF9800,
-      badgeIconCodePoint: 0xe25b, // favorite_rounded
-      badgeColorValue: 0xFFFF5252,
-      isGold: false,
-    ),
-    HelpCharacter(
-      id: 'c2',
-      tag: 'MOTHER',
-      tagColorValue: 0xFF1976D2,
-      name: 'Healthcare Fund',
-      message: 'Let\'s save for medicine, just in case. Health comes first.',
-      amount: 200.0,
-      iconCodePoint: 0xe21f, // elderly_woman_rounded
-      avatarBgValue: 0xFFE3F2FD,
-      avatarFgValue: 0xFF1976D2,
-      badgeIconCodePoint: 0xe2e4, // health_and_safety_rounded
-      badgeColorValue: 0xFF2196F3,
-      isGold: false,
-    ),
-  ];
+  List<HelpCharacter> _characters = [];
 
-  final List<Lending> _lendingList = [
-    Lending(
-      id: 'l1',
-      personName: 'Alex Smith',
-      amount: 450.0,
-      dueDate: DateTime.now().add(const Duration(days: 5)),
-      isReturned: false,
-    ),
-    Lending(
-      id: 'l2',
-      personName: 'Sarah J.',
-      amount: 120.0,
-      dueDate: DateTime.now().subtract(const Duration(days: 2)),
-      isReturned: true,
-    ),
-  ];
+  final List<Lending> _lendingList = [];
 
-  final List<Transaction> _transactions = [
-    Transaction(
-      id: '1',
-      title: 'Salary Credit',
-      amount: 5000.0,
-      date: DateTime.now().subtract(const Duration(days: 2)),
-      type: TransactionType.income,
-    ),
-    Transaction(
-      id: '2',
-      title: 'Grocery Shopping',
-      amount: 150.0,
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      type: TransactionType.expense,
-    ),
-    Transaction(
-      id: '3',
-      title: 'Bought 0.05g Gold',
-      amount: 325.0,
-      date: DateTime.now(),
-      type: TransactionType.gold,
-    ),
-  ];
+  List<Transaction> _transactions = [];
+
+  bool get isInitialized => _isInitialized;
+
+  WealthProvider() {
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    print("WealthProvider: Initializing...");
+    try {
+      final profile = await _dbService.fetchProfile();
+      
+      if (profile != null) {
+        print("WealthProvider: Found profile in cloud. Loading data...");
+        _cashSavings = (profile['cashSavings'] as num).toDouble();
+        _digitalGoldInGrams = (profile['digitalGoldInGrams'] as num).toDouble();
+        
+        _transactions = await _dbService.fetchTransactions();
+        _goals = await _dbService.fetchGoals();
+        _characters = await _dbService.fetchCharacters();
+        print("WealthProvider: Data loaded successfully. Txs: ${_transactions.length}, Goals: ${_goals.length}");
+      } else {
+        print("WealthProvider: No profile found. Initializing clean state...");
+        // Ensure starting with zero/empty
+        _cashSavings = 0.0;
+        _digitalGoldInGrams = 0.0;
+        _transactions = [];
+        _characters = [];
+        _goals = [
+          FinancialGoal(
+            id: 'g-initial-${DateTime.now().millisecondsSinceEpoch}',
+            targetWealth: 50000.0,
+            targetGoldGrams: 1.0,
+            targetHelpActivities: 5,
+            startingWealth: 0.0,
+            startingGoldGrams: 0.0,
+            startingHelpCount: 0,
+            startDate: DateTime.now(),
+          ),
+        ];
+
+        await _syncProfile();
+        for (var goal in _goals) { await _dbService.saveGoal(goal); }
+      }
+    } catch (e) {
+      print("WealthProvider: Error during initialization: $e");
+    }
+
+    _isInitialized = true;
+    notifyListeners();
+  }
+
+  Future<void> _syncProfile() async {
+    await _dbService.updateProfile(_cashSavings, _digitalGoldInGrams);
+  }
+
+  Future<void> wipeDataAndReset() async {
+    _isInitialized = false;
+    notifyListeners();
+    
+    await _dbService.resetUserData();
+    
+    _cashSavings = 0.0;
+    _digitalGoldInGrams = 0.0;
+    _transactions = [];
+    _characters = [];
+    _goals = [
+      FinancialGoal(
+        id: 'g-initial-${DateTime.now().millisecondsSinceEpoch}',
+        targetWealth: 50000.0,
+        targetGoldGrams: 1.0,
+        targetHelpActivities: 5,
+        startingWealth: 0.0,
+        startingGoldGrams: 0.0,
+        startingHelpCount: 0,
+        startDate: DateTime.now(),
+      ),
+    ];
+
+    await _syncProfile();
+    for (var goal in _goals) { await _dbService.saveGoal(goal); }
+    
+    _isInitialized = true;
+    notifyListeners();
+  }
 
   // Getters
   double get cashSavings => _cashSavings;
@@ -221,8 +245,8 @@ class WealthProvider with ChangeNotifier {
   List<Transaction> get transactions => [..._transactions.reversed];
   List<HelpCharacter> get characters => _characters;
   
-  void addNewGoal(double wealthTarget, double goldTarget, int helpTarget) {
-    _goals.add(FinancialGoal(
+  Future<void> addNewGoal(double wealthTarget, double goldTarget, int helpTarget) async {
+    final goal = FinancialGoal(
       id: DateTime.now().toString(),
       targetWealth: wealthTarget,
       targetGoldGrams: goldTarget,
@@ -231,7 +255,9 @@ class WealthProvider with ChangeNotifier {
       startingGoldGrams: _digitalGoldInGrams,
       startingHelpCount: totalHelpActivitiesCount,
       startDate: DateTime.now(),
-    ));
+    );
+    _goals.add(goal);
+    await _dbService.saveGoal(goal);
     notifyListeners();
   }
 
@@ -299,13 +325,15 @@ class WealthProvider with ChangeNotifier {
   double get netBalance => monthlyIncome - monthlyExpenses - monthlyGoldAmount;
 
   // Actions
-  void addNewCharacter(HelpCharacter character) {
+  Future<void> addNewCharacter(HelpCharacter character) async {
     _characters.add(character);
+    await _dbService.saveCharacter(character);
     notifyListeners();
   }
 
-  void deleteCharacter(String id) {
+  Future<void> deleteCharacter(String id) async {
     _characters.removeWhere((c) => c.id == id);
+    await _dbService.deleteCharacter(id);
     notifyListeners();
   }
 
@@ -345,9 +373,10 @@ class WealthProvider with ChangeNotifier {
     final amount = char.amount;
     final toGold = char.isGold;
 
+    Transaction tx;
     if (toGold) {
       final grams = amount / _goldPricePerGram;
-      final newTransaction = Transaction(
+      tx = Transaction(
         id: DateTime.now().toString(),
         title: 'Help Save: ${char.name} (Gold)',
         amount: amount,
@@ -355,9 +384,8 @@ class WealthProvider with ChangeNotifier {
         type: TransactionType.gold,
       );
       _digitalGoldInGrams += grams;
-      _transactions.add(newTransaction);
     } else {
-      final newTransaction = Transaction(
+      tx = Transaction(
         id: DateTime.now().toString(),
         title: 'Help Save: ${char.name} (Savings)',
         amount: amount,
@@ -365,17 +393,20 @@ class WealthProvider with ChangeNotifier {
         type: TransactionType.income,
       );
       _cashSavings += amount;
-      _transactions.add(newTransaction);
     }
 
+    _transactions.add(tx);
     char.currentHelpedCount++;
     char.lastHelpedDate = DateTime.now();
     
+    await _dbService.saveTransaction(tx);
+    await _dbService.saveCharacter(char);
+    await _syncProfile();
     notifyListeners();
   }
 
-  void addIncome(String title, double amount, {String note = ""}) {
-    final newTransaction = Transaction(
+  Future<void> addIncome(String title, double amount, {String note = ""}) async {
+    final tx = Transaction(
       id: DateTime.now().toString(),
       title: title,
       amount: amount,
@@ -384,13 +415,15 @@ class WealthProvider with ChangeNotifier {
       note: note,
     );
     _cashSavings += amount;
-    _transactions.add(newTransaction);
+    _transactions.add(tx);
+    await _dbService.saveTransaction(tx);
+    await _syncProfile();
     notifyListeners();
   }
 
-  void addExpense(String title, double amount, {String note = ""}) {
+  Future<void> addExpense(String title, double amount, {String note = ""}) async {
     if (_cashSavings < amount) return; // Simple check
-    final newTransaction = Transaction(
+    final tx = Transaction(
       id: DateTime.now().toString(),
       title: title,
       amount: amount,
@@ -399,7 +432,9 @@ class WealthProvider with ChangeNotifier {
       note: note,
     );
     _cashSavings -= amount;
-    _transactions.add(newTransaction);
+    _transactions.add(tx);
+    await _dbService.saveTransaction(tx);
+    await _syncProfile();
     notifyListeners();
   }
 
@@ -420,7 +455,7 @@ class WealthProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteTransaction(String id) {
+  Future<void> deleteTransaction(String id) async {
     final index = _transactions.indexWhere((t) => t.id == id);
     if (index != -1) {
       final tx = _transactions[index];
@@ -431,26 +466,23 @@ class WealthProvider with ChangeNotifier {
       } else if (tx.type == TransactionType.expense) {
         _cashSavings += tx.amount;
       } else if (tx.type == TransactionType.gold) {
-        // Find if it was a gold purchase to reverse grams
-        // We can estimate grams if not stored explicitly, or search the title
-        // In this app, many gold transactions are in the title 'Bought Xg Gold'
-        // or from HelpCharacters. For simplicity, we use the price at transaction time logic
-        // or just reverse the cash and estimate grams.
         _cashSavings += tx.amount;
         final grams = tx.amount / _goldPricePerGram;
         _digitalGoldInGrams -= grams;
       }
       
       _transactions.removeAt(index);
+      await _dbService.deleteTransaction(id);
+      await _syncProfile();
       notifyListeners();
     }
   }
 
-  void buyGoldByAmount(double amount, {String note = ""}) {
+  Future<void> buyGoldByAmount(double amount, {String note = ""}) async {
     if (_cashSavings < amount) return;
     final grams = amount / _goldPricePerGram;
     
-    final newTransaction = Transaction(
+    final tx = Transaction(
       id: DateTime.now().toString(),
       title: 'Digital Gold',
       amount: amount,
@@ -460,7 +492,9 @@ class WealthProvider with ChangeNotifier {
     );
     _cashSavings -= amount;
     _digitalGoldInGrams += grams;
-    _transactions.add(newTransaction);
+    _transactions.add(tx);
+    await _dbService.saveTransaction(tx);
+    await _syncProfile();
     notifyListeners();
   }
 }

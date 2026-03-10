@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/wealth_provider.dart';
 import '../theme/app_theme.dart';
 import '../screens/home_screen.dart';
 import '../screens/activity_screen.dart';
@@ -52,6 +54,27 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<WealthProvider>(context);
+
+    if (!provider.isInitialized) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: AppTheme.primaryGreen),
+              SizedBox(height: 16),
+              Text(
+                "Syncing your wealth...",
+                style: TextStyle(color: AppTheme.textGray, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       body: PageView(

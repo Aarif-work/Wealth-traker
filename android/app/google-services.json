@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "572387048037",
+    "firebase_url": "https://my-wealth-43fbe-default-rtdb.firebaseio.com",
+    "project_id": "my-wealth-43fbe",
+    "storage_bucket": "my-wealth-43fbe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:572387048037:android:b2ae3ac59ed8e47d8c648c",
+        "android_client_info": {
+          "package_name": "com.aarif.mywealth"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2E2KHI_URsE0eYcr-WTC6gVp_eFWcLu8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -46,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildProfileHeader(),
                   const SizedBox(height: 24),
                   _buildWealthQuickView(totalWealth, currencyFormat),
+                  _buildDangerZone(context, provider),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -151,6 +152,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const Spacer(),
           Icon(Icons.chevron_right_rounded, color: Colors.blueGrey.shade100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDangerZone(BuildContext context, WealthProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("DANGER ZONE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.redAccent, letterSpacing: 1.5)),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () => _showResetConfirmation(context, provider),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.1)),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.delete_forever_rounded, color: Colors.redAccent),
+                  SizedBox(width: 16),
+                  Text("Reset All App Data", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+                  Spacer(),
+                  Icon(Icons.chevron_right_rounded, color: Colors.redAccent),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showResetConfirmation(BuildContext context, WealthProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Reset All Data?", style: TextStyle(fontWeight: FontWeight.w900)),
+        content: const Text("This will permanently delete ALL transactions, characters, and gold savings from your cloud account. This cannot be undone."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL", style: TextStyle(color: AppTheme.textGray))),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await provider.wipeDataAndReset();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("All data has been wiped.")),
+                );
+              }
+            },
+            child: const Text("WIPE EVERYTHING", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+          ),
         ],
       ),
     );
